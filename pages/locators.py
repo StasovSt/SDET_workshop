@@ -1,5 +1,5 @@
 from selenium.webdriver.common.by import By
-from data import registration_user_data
+from data_for_test import registration_user_data
 
 
 class RegistrationFormPageLocators:
@@ -62,8 +62,8 @@ class RegistrationFormPageLocators:
     # Выпадающий список City
     CITY_DROPDOWN = (By.ID, "city")
 
-    # City -
-    CITY_0 = (By.ID, "react-select-4-option-0")
+    # Список City
+    CITY_LIST = (By.XPATH, "//div[@class=' css-11unzgr']/div")
 
     # Кнопка Submit
     SUBMIT_BUTTON = (By.ID, "submit")

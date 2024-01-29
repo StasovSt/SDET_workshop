@@ -10,7 +10,8 @@ registration_user_data = {
     "date_birthday_month": "November",
     "date_birthday_day": "17",
     "subjects": "some subjects...",
+    "picture": "picture.png",
     "current_address": "Russia, Moscow, ...",
     "state": "Uttar Pradesh",
-    "city": ""
+    "city": "Merrut"
 }

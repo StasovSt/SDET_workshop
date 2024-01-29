@@ -1,5 +1,5 @@
-import time
-
+import os
+import allure
 from pages.base_page import BasePage
 from pages.locators import RegistrationFormPageLocators
 from selenium.webdriver.support.ui import Select
@@ -8,18 +8,22 @@ from selenium.webdriver.support.ui import Select
 class StudentRegistrationFormPage(BasePage):
     """Методы для взаимодействия со страницей регистрации"""
 
+    @allure.step("Заполнение поля Firstname")
     def fill_firstname_field(self, data: str):
         """Действие: Заполнить поле Firstname"""
         self.send_data(RegistrationFormPageLocators.FIRSTNAME_FIELD, data)
 
+    @allure.step("Заполнение поля Lastname")
     def fill_lastname_field(self, data: str):
         """Действие: Заполнить поле Lastname"""
         self.send_data(RegistrationFormPageLocators.LASTNAME_FIELD, data)
 
+    @allure.step("Заполнение поля UserEmail")
     def fill_user_email_field(self, data: str):
         """Действие: Заполнить поле UserEmail"""
         self.send_data(RegistrationFormPageLocators.MAIL_FIELD, data)
 
+    @allure.step("Выбор радио-баттона Gender")
     def choice_gender(self, gender):
         """Действие: Выбрать радио-баттон Gender"""
         if gender == "Male":
@@ -29,14 +33,17 @@ class StudentRegistrationFormPage(BasePage):
         elif gender == "Other":
             self.click_element(RegistrationFormPageLocators.RADIO_BUTTON_GENDER_OTHER)
 
+    @allure.step("Заполнение поля UserNumber")
     def fill_user_number_field(self, data: str):
         """Действие: Заполнить поле UserNumber"""
         self.send_data(RegistrationFormPageLocators.USER_NUMBER_FIELD, data)
 
+    @allure.step("Выбор даты рождения")
     def choice_date_birthday(self, year, month):
         """
         Действие: Выбрать дату рождения в календаре
         Выбор года и месяца - через выпадающие списки
+        Выбор дня - через локатор
         """
         self.click_element(RegistrationFormPageLocators.DATE_OF_BIRTHDAY_CALENDAR)
 
@@ -48,14 +55,24 @@ class StudentRegistrationFormPage(BasePage):
 
         self.click_element(RegistrationFormPageLocators.DAY_IN_CALENDAR)
 
+    @allure.step("Заполнение поля Subjects")
     def fill_subjects_field(self, data: str):
         """Действие: Заполнить поле Subjects"""
         self.send_data(RegistrationFormPageLocators.SUBJECTS_FIELD, data)
 
+    @allure.step("Заполнение поля CurrentAddress")
     def fill_current_address_field(self, data: str):
         """Действие: Заполнить поле CurrentAddress"""
         self.send_data(RegistrationFormPageLocators.CURRENT_ADDRESS_FIELD, data)
 
+    @allure.step("Загрузка файла")
+    def upload_file(self, file):
+        """Действие: загрузить файл"""
+        current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        file_path = os.path.join(current_dir, file)
+        self.send_data(RegistrationFormPageLocators.SELECT_PICTURE, file_path)
+
+    @allure.step("Выбор State")
     def choice_state(self, state: str):
         """Действие: Выбрать State"""
         self.click_element(RegistrationFormPageLocators.STATE_DROPDOWN)
@@ -69,23 +86,29 @@ class StudentRegistrationFormPage(BasePage):
         else:
             raise ValueError("Bad State")
 
-    def choice_city(self):
+    @allure.step("Выбор City")
+    def choice_city(self, city: str):
         """Действие: Выбрать City"""
         self.click_element(RegistrationFormPageLocators.CITY_DROPDOWN)
-        time.sleep(180)
-        self.click_element(RegistrationFormPageLocators.CITY_0)
+        cities = self.browser.find_elements(*RegistrationFormPageLocators.CITY_LIST)
+        for element in cities:
+            if element.text == city:
+                element.click()
+                break
 
+    @allure.step("Клик по кнопке Submit")
     def click_submit(self):
         """Действие: Клик по кнопке Submit"""
         self.click_element(RegistrationFormPageLocators.SUBMIT_BUTTON)
 
+    @allure.step("Проверка соответствия заголовка во всплывающем окне")
     def assert_modal_window_title(self):
         """Проверка того, что во всплывающем окне корректный заголовок"""
         modal_window_title = self.wait_until_visible(RegistrationFormPageLocators.MODAL_WINDOW_TITLE)
         assert modal_window_title.text == "Thanks for submitting the form", \
             f"Во всплывающем окне другой title: {modal_window_title.text}"
 
-    def prepare_list_with_text_of_webelements(self, list_webelements: list):
+    def prepare_list_with_text_of_webelements(self, list_webelements: list) -> list:
         """
         Подготовка списка состоящего из webelement.text
         На вход получает список веб-элементов
@@ -98,7 +121,7 @@ class StudentRegistrationFormPage(BasePage):
 
         return list_with_text_of_webelements
 
-    def prepare_user_parameter_from_modal_window(self):
+    def prepare_user_parameter_from_modal_window(self) -> dict:
         """
         Подготовка словаря с регистрационными данными, полученными из модального окна
         :return: dict, где: key - label из модального окна, value - values из модального окна
@@ -113,6 +136,7 @@ class StudentRegistrationFormPage(BasePage):
 
         return dict(zip(user_parameters_keys, user_parameters_values))
 
+    @allure.step("Проверка соответствия регистрационных данных во всплывающем окне")
     def assert_modal_window_body(self, registration_data: dict):
         """Проверка того, что во всплывающем окне указаны данные которые вводили при регистрации"""
         # словарь с данными которые вводили при регистрации
@@ -143,14 +167,17 @@ class StudentRegistrationFormPage(BasePage):
             f"{expected_reg_data['date_birthday_day']} {expected_reg_data['date_birthday_month']}," \
             f"{expected_reg_data['date_birthday_year']}"
 
-        # assert expected_reg_data["current_address"] == actual_reg_data["Subjects"]
+        assert expected_reg_data["subjects"] == actual_reg_data["Subjects"], \
+            f"Subjects '{actual_reg_data['Subjects']}' не соответствует значению " \
+            f"указанному при регистрации '{expected_reg_data['subjects']}'"
 
-        # assert expected_reg_data["current_address"] == actual_reg_data["Hobbies"],
-
-        # assert expected_reg_data["current_address"] == actual_reg_data["Picture"],
+        assert expected_reg_data["picture"] == actual_reg_data["Picture"], \
+            f"Picture '{actual_reg_data['Picture']}' не соответствует значению " \
+            f"указанному при регистрации {expected_reg_data['picture']}"
 
         assert expected_reg_data["current_address"] == actual_reg_data["Address"], \
             f"Address {actual_reg_data['Address']} не соответствует значению указанному при регистрации " \
             f"{expected_reg_data['current_address']}"
 
-        # assert f"{expected_reg_data['state']} {expected_reg_data['city']}" == actual_reg_data["State and City"], f" {} не соответствует значению указанному при регистрации {}"
+        assert f"{expected_reg_data['state']} {expected_reg_data['city']}" == actual_reg_data[
+            "State and City"], f"не соответствует значению указанному при регистрации"
